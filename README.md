@@ -1,6 +1,6 @@
 # [Full Stack Web Developer program](https://fullstackopen.com) - University of Helsinki – Computer Science Studies
 
-Courses 5 Theme: Testing React apps, custom hooks <br />
+**Courses 5 Theme: Testing React apps, custom hooks** <br />
 In this part we return to the frontend, by first looking at different possibilities for testing React code. We will also implement token based authentication to the frontend, that will enable users to log in to our application.
 
 **Jari Hartikainen** <br />
