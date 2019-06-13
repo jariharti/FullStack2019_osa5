@@ -14,9 +14,9 @@ const App = () => {
   const [username, setUsername] = useState('') 
   const [password, setPassword] = useState('') 
   const [user, setUser] = useState(null) 
-  const [newTitle, setTitle] = useState(null) 
-  const [newAuthor, setAuthor] = useState(null) 
-  const [newUrl, setUrl] = useState(null) 
+  const [newTitle, setTitle] = useState('') 
+  const [newAuthor, setAuthor] = useState('') 
+  const [newUrl, setUrl] = useState('') 
  
   // Only at a start-up, get all blogs from backend //
   useEffect(() => {
@@ -35,6 +35,31 @@ const App = () => {
       blogService.setToken(user.token)
     }
   }, [])
+
+  // User is trying to login to the system -> Step 2: Logging information is passed to the backend //
+  const handleLogin = async (event) => {
+    event.preventDefault()
+    try {
+      const user = await loginService.login({
+        username, password,
+      })
+
+      window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
+      blogService.setToken(user.token)
+      setNotificationMessageType("success")
+      setNotificationMessage(`${username} logged successfully`)
+      setUser(user)
+      setUsername('')
+      setPassword('')
+    } catch (exception) {
+        setNotificationMessageType("error")
+        setNotificationMessage('invalid username or password')
+        setTimeout(() => {
+          setNotificationMessageType(null)
+          setNotificationMessage(null)
+        }, 5000)
+    }
+  }
 
   // User is trying to login to the system -> Step 1: user is giving login information in the window //
   const loginForm = () => (
@@ -61,31 +86,6 @@ const App = () => {
     </form>      
   )
 
-
-  // User is trying to login to the system -> Step 2: Logging information is passed to the backend //
-  const handleLogin = async (event) => {
-    event.preventDefault()
-    try {
-      const user = await loginService.login({
-        username, password,
-      })
-
-      window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
-      blogService.setToken(user.token)
-      setNotificationMessageType("success")
-        setNotificationMessage(`${username} logged successfully`)
-      setUser(user)
-      setUsername('')
-      setPassword('')
-    } catch (exception) {
-      setNotificationMessageType("error")
-      setNotificationMessage('invalid username or password')
-      setTimeout(() => {
-        setNotificationMessageType(null)
-        setNotificationMessage(null)
-      }, 5000)
-    }
-  }
   
     // User has decided to logout -> Step 1: a button creation for logout operation
   const logoutForm = () => (
@@ -158,12 +158,34 @@ const App = () => {
   }
 
   // List all the blogs for the window
-  const rows = () => blogs.map(blog =>
-    <li className='blog'>
+  const rows = () => blogs.map(blog  => 
+    <li key={blog.id}>className='blog'>
       {blog.title} &nbsp; by &nbsp; {blog.author}
     </li>
   )
 
+  if (user === null) {
+    return (
+      <div>
+        <Notification message={notificationMessage} notificationMessageType={notificationMessageType} />
+        <h2>Log in to application</h2>
+          {loginForm()}
+      </div>
+    )
+  }
+
+  else {
+    return (
+    <div>
+      <Notification message={notificationMessage} notificationMessageType={notificationMessageType} />
+      <h2>blogs</h2>
+      {logoutForm()}
+      {newForm()}
+      {rows()}
+    </div>
+   )
+  }
+/*
   if (user === null) {
     return (
       <div>
@@ -186,7 +208,8 @@ const App = () => {
       {rows()}
     </div>
    )
-  }
+  }*/
+
 }
 
 export default App
