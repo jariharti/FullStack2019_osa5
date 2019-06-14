@@ -17,6 +17,7 @@ const App = () => {
   const [newTitle, setTitle] = useState('') 
   const [newAuthor, setAuthor] = useState('') 
   const [newUrl, setUrl] = useState('') 
+  //const [loginVisible, setLoginVisible] = useState(false)
  
   // Only at a start-up, get all blogs from backend //
   useEffect(() => {
@@ -62,7 +63,8 @@ const App = () => {
   }
 
   // User is trying to login to the system -> Step 1: user is giving login information in the window //
-  const loginForm = () => (
+  const loginForm = () => {
+    return (
     <form onSubmit={handleLogin}>
       <div>
       &nbsp; username &nbsp;
@@ -79,23 +81,28 @@ const App = () => {
           type="password"
           value={password}
           name="Password"
-          onChange={({ target }) => setPassword(target.value)}
+          onChange={({ target }) => {
+            return setPassword(target.value);
+          }}
         />
       </div>
       <button type="submit">login</button>
-    </form>      
-  )
+    </form>  
+    )    
+  }
 
   
     // User has decided to logout -> Step 1: a button creation for logout operation
-  const logoutForm = () => (
+  const logoutForm = () => {
+    return (
     <form onSubmit={handleLogOut}>
       <p>
          {user.name} logged in
          <button type="submit">logout</button>
       </p>
     </form>  
-  )
+    )
+  }
 
   // User has decided to logout -> Step 2: logout command
   const handleLogOut = (event) => {
@@ -103,7 +110,12 @@ const App = () => {
   }
 
   // User is creating a new blog -> Step 1: user is giving blog information in the window //
-  const newForm = () => (
+  const newForm = () => {
+
+    //const hideWhenVisible = { display: loginVisible ? 'none' : '' }
+    //const showWhenVisible = { display: loginVisible ? '' : 'none' }
+    
+    return (
     <form onSubmit={addBlog}>
       <div>
         &nbsp; title &nbsp;
@@ -134,8 +146,8 @@ const App = () => {
         </div>
       <button type="submit">create</button>
     </form>  
-  )
-
+    )
+  }
 
   // User is creating a new blog -> Step 2: Blog information is passed to the backend //
   const addBlog = (event) => {
@@ -185,31 +197,6 @@ const App = () => {
     </div>
    )
   }
-/*
-  if (user === null) {
-    return (
-      <div>
-        <Notification message={notificationMessage} notificationMessageType={notificationMessageType} />
-        <h2>Log in to application</h2>
-        <form>
-          {loginForm()}
-        </form>
-      </div>
-    )
-  }
-
-  else {
-    return (
-    <div>
-      <Notification message={notificationMessage} notificationMessageType={notificationMessageType} />
-      <h2>blogs</h2>
-      {logoutForm()}
-      {newForm()}
-      {rows()}
-    </div>
-   )
-  }*/
-
 }
 
 export default App
