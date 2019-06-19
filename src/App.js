@@ -1,11 +1,15 @@
 /* Jari Hartikainen, 13.6.2019 */
-/* Aalto University, Course: Full Stack Web Development, Part 2: blogilistan frontrend 5.1 .... 5.4*/
+/* Aalto University, Course: Full Stack Web Development, Part 2: blogilistan frontrend 5.1 .... 5.6*/
 
 import React, { useState, useEffect } from 'react' 
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import './app.css'
+import NewForm from './components/NewForm'
+import LoginForm from './components/LoginForm'
+import LogoutForm from './components/LogoutForm'
+import BlogList from './components/BlogList'
 
 const App = () => {
   const [blogs, setBlogs] = useState([]) 
@@ -17,15 +21,19 @@ const App = () => {
   const [newTitle, setTitle] = useState('') 
   const [newAuthor, setAuthor] = useState('') 
   const [newUrl, setUrl] = useState('') 
-  //const [loginVisible, setLoginVisible] = useState(false)
+  const [blogVisible, setBlogVisible] = useState(false)
+  const [count, setCount] = useState(0)
+  
  
   // Only at a start-up, get all blogs from backend //
   useEffect(() => {
     blogService
       .getAll().then(initialBlogs => {
+        initialBlogs.map (x => x.details = false)
         setBlogs(initialBlogs)
       })
   }, [])
+
 
   // Only at a start-up, check if user already logged in. Login information is stored in the browser local storage //
   useEffect(() => {
@@ -49,6 +57,10 @@ const App = () => {
       blogService.setToken(user.token)
       setNotificationMessageType("success")
       setNotificationMessage(`${username} logged successfully`)
+      setTimeout(() => {
+        setNotificationMessageType(null)
+        setNotificationMessage(null)
+      }, 5000)
       setUser(user)
       setUsername('')
       setPassword('')
@@ -62,91 +74,9 @@ const App = () => {
     }
   }
 
-  // User is trying to login to the system -> Step 1: user is giving login information in the window //
-  const loginForm = () => {
-    return (
-    <form onSubmit={handleLogin}>
-      <div>
-      &nbsp; username &nbsp;
-          <input
-          type="text"
-          value={username}
-          name="Username"
-          onChange={({ target }) => setUsername(target.value)}
-        />
-      </div>
-      <div>
-      &nbsp; password &nbsp;
-          <input
-          type="password"
-          value={password}
-          name="Password"
-          onChange={({ target }) => {
-            return setPassword(target.value);
-          }}
-        />
-      </div>
-      <button type="submit">login</button>
-    </form>  
-    )    
-  }
-
-  
-    // User has decided to logout -> Step 1: a button creation for logout operation
-  const logoutForm = () => {
-    return (
-    <form onSubmit={handleLogOut}>
-      <p>
-         {user.name} logged in
-         <button type="submit">logout</button>
-      </p>
-    </form>  
-    )
-  }
-
   // User has decided to logout -> Step 2: logout command
   const handleLogOut = (event) => {
     window.localStorage.removeItem('loggedBlogappUser')
-  }
-
-  // User is creating a new blog -> Step 1: user is giving blog information in the window //
-  const newForm = () => {
-
-    //const hideWhenVisible = { display: loginVisible ? 'none' : '' }
-    //const showWhenVisible = { display: loginVisible ? '' : 'none' }
-    
-    return (
-    <form onSubmit={addBlog}>
-      <div>
-        &nbsp; title &nbsp;
-        <input
-          type="text"
-          value={newTitle}
-          name="title"
-          onChange={({ target }) => setTitle(target.value)}
-        />
-      </div>
-      <div>
-        &nbsp; author &nbsp;
-        <input
-          type="text"
-          value={newAuthor}
-          name="author"
-          onChange={({ target }) => setAuthor(target.value)}
-        />
-      </div>
-      <div>
-        &nbsp; url &nbsp;
-        <input
-          type="text"
-          value={newUrl}
-          name="url"
-          onChange={({ target }) => setUrl(target.value)}
-      />
-        </div>
-      <button type="submit">create</button>
-    </form>  
-    )
   }
 
   // User is creating a new blog -> Step 2: Blog information is passed to the backend //
@@ -163,25 +93,95 @@ const App = () => {
         setBlogs(blogs.concat(returnedBlog))
         setNotificationMessageType("success")
         setNotificationMessage(`a new blog ${newTitle} by ${newAuthor} added`)
+        setTimeout(() => {
+          setNotificationMessageType(null)
+          setNotificationMessage(null)
+        }, 5000)
         setTitle('')
         setAuthor('')
         setUrl('')
       })
   }
 
+  
+
   // List all the blogs for the window
-  const rows = () => blogs.map(blog  => 
-    <li key={blog.id}>className='blog'>
-      {blog.title} &nbsp; by &nbsp; {blog.author}
-    </li>
+  const rows = () => blogs.map(blog => 
+    <BlogList
+      key={blog.id}
+      blog={blog}
+      showDetails={() => showDetailsOf(blog.id)}
+      likes={() => likes()}
+    />
   )
+
+  // Handle visibility change between showing all blogs data, or just sub set of the blogs data
+  const showDetailsOf = (_id) => {
+    blogs[blogs.findIndex(x => x.id === _id)].details = !blogs[blogs.findIndex(x => x.id === _id)].details
+    setBlogs(blogs)
+    setCount(count+1)
+   }
+
+   // At the momenst this doesn't do anything
+   const likes = () => {
+     console.log("Likes voted")
+   }
+
+
+const loginForm = () => {
+  return (
+    <div>
+      <LoginForm
+        username = {username}
+        password = {password}
+        handleLogin = {handleLogin}
+        handleUserName = {({ target }) => setUsername(target.value)}
+        handlePassword = {({ target }) => setPassword(target.value)}
+      />
+    </div>
+  )
+}
+
+const logoutForm = () => {
+  return (
+    <div>
+      <LogoutForm
+        handleLogOut = {handleLogOut}
+        loggedPerson = {user.name}
+      />
+    </div>
+  )
+}
+
+const newForm = () => {
+  const hideWhenVisible = { display: blogVisible ? 'none' : '' }
+  const showWhenVisible = { display: blogVisible ? '' : 'none' }
+return (
+  <div>
+    <div style={hideWhenVisible}>
+      <button onClick={() => setBlogVisible(true)}>new note</button>
+    </div>
+    <div style={showWhenVisible}>
+      <NewForm
+          addBlog={addBlog}
+          newAuthor={newAuthor}
+          newUrl={newUrl}
+          handleTitleChange={({ target }) => setTitle(target.value)}
+          handleAuthorChange={({ target }) => setAuthor(target.value)}
+          handleUrlChange={({ target }) => setUrl(target.value)}
+      />
+        <button onClick={() => setBlogVisible(false)}>cancel</button>
+    </div>
+  </div>
+  )
+}
 
   if (user === null) {
     return (
       <div>
         <Notification message={notificationMessage} notificationMessageType={notificationMessageType} />
         <h2>Log in to application</h2>
-          {loginForm()}
+        {loginForm()}
       </div>
     )
   }

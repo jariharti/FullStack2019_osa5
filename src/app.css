@@ -18,3 +18,9 @@
     padding: 10px;
     margin-bottom: 10px;
   }
+
+  #mybutton {
+    border: none;
+    color: red;
+    background: transparent;
+  }
