@@ -1,5 +1,5 @@
-/* Jari Hartikainen, 13.6.2019 */
-/* Aalto University, Course: Full Stack Web Development, Part 2: blogilistan frontrend 5.1 .... 5.6*/
+/* Jari Hartikainen, 25.6.2019 */
+/* Aalto University, Course: Full Stack Web Development, Part 2: blogilistan frontrend 5.1 .... 5.10*/
 
 import React, { useState, useEffect } from 'react' 
 import Notification from './components/Notification'
@@ -17,31 +17,31 @@ const App = () => {
   const [notificationMessageType, setNotificationMessageType] = useState()
   const [username, setUsername] = useState('') 
   const [password, setPassword] = useState('') 
-  const [user, setUser] = useState(null) 
+  const [loggedIn, setLoggedIn] = useState(null) 
   const [newTitle, setTitle] = useState('') 
   const [newAuthor, setAuthor] = useState('') 
   const [newUrl, setUrl] = useState('') 
   const [blogVisible, setBlogVisible] = useState(false)
   const [count, setCount] = useState(0)
-  
+  const [count2, setCoun2] = useState(0)
  
-  // Only at a start-up, get all blogs from backend //
+  // Get all blogs from backend, whenver count2 is changing //
   useEffect(() => {
     blogService
       .getAll().then(initialBlogs => {
         initialBlogs.map (x => x.details = false)
-        setBlogs(initialBlogs)
+        setBlogs(initialBlogs.sort((a,b) => b.likes - a.likes))
       })
-  }, [])
+  }, [count2])
 
 
   // Only at a start-up, check if user already logged in. Login information is stored in the browser local storage //
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
-      const user = JSON.parse(loggedUserJSON)
-      setUser(user)
-      blogService.setToken(user.token)
+      const loggedIn = JSON.parse(loggedUserJSON)
+      setLoggedIn(loggedIn)
+      blogService.setToken(loggedIn.token)
     }
   }, [])
 
@@ -49,19 +49,19 @@ const App = () => {
   const handleLogin = async (event) => {
     event.preventDefault()
     try {
-      const user = await loginService.login({
+      const loggedIn = await loginService.login({
         username, password,
       })
 
-      window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
-      blogService.setToken(user.token)
+      window.localStorage.setItem('loggedBlogappUser', JSON.stringify(loggedIn))
+      blogService.setToken(loggedIn.token)
       setNotificationMessageType("success")
       setNotificationMessage(`${username} logged successfully`)
       setTimeout(() => {
         setNotificationMessageType(null)
         setNotificationMessage(null)
       }, 5000)
-      setUser(user)
+      setLoggedIn(loggedIn)
       setUsername('')
       setPassword('')
     } catch (exception) {
@@ -90,16 +90,16 @@ const App = () => {
 
     blogService
       .create(newBlog).then(returnedBlog => {
-        setBlogs(blogs.concat(returnedBlog))
+        setBlogs(blogs.concat(returnedBlog).sort((a,b) => b.likes - a.likes))
+        setTitle('')
+        setAuthor('')
+        setUrl('')
         setNotificationMessageType("success")
         setNotificationMessage(`a new blog ${newTitle} by ${newAuthor} added`)
         setTimeout(() => {
           setNotificationMessageType(null)
           setNotificationMessage(null)
         }, 5000)
-        setTitle('')
-        setAuthor('')
-        setUrl('')
       })
   }
 
@@ -110,21 +110,62 @@ const App = () => {
     <BlogList
       key={blog.id}
       blog={blog}
+      loggedIn={loggedIn.username}
       showDetails={() => showDetailsOf(blog.id)}
-      likes={() => likes()}
+      likesBlog={() => likes(blog.id)}
+      deleteBlog={() => deleteBlog(blog.id)}
     />
   )
 
   // Handle visibility change between showing all blogs data, or just sub set of the blogs data
   const showDetailsOf = (_id) => {
     blogs[blogs.findIndex(x => x.id === _id)].details = !blogs[blogs.findIndex(x => x.id === _id)].details
-    setBlogs(blogs)
+    setBlogs(blogs.sort((a,b) => b.likes - a.likes))
     setCount(count+1)
    }
 
-   // At the momenst this doesn't do anything
-   const likes = () => {
-     console.log("Likes voted")
+   // Update new likes to backened
+   const likes = (_id) => {
+    var arrayIndex = blogs.findIndex(x => x.id === _id)
+      blogs[arrayIndex].likes = blogs[arrayIndex].likes + 1
+      setBlogs(blogs.sort((a,b) => b.likes - a.likes))
+      var updatedObject = {
+        likes: blogs[arrayIndex].likes,
+        author: blogs[arrayIndex].author,
+        title: blogs[arrayIndex].title,
+        url: blogs[arrayIndex].url
+      }
+
+    blogService
+      .update(_id,updatedObject).then(returnedBlog => {
+        setNotificationMessageType("success")
+        setNotificationMessage(`a new like updated to backend`)
+        setTimeout(() => {
+          setNotificationMessageType(null)
+          setNotificationMessage(null)
+        }, 5000)
+      })
+   }
+
+  // Delete blog in backened 
+  const deleteBlog = async (_id) => {
+    var arrayIndex = blogs.findIndex(x => x.id === _id)
+    var blogToBeDeleted = blogs[arrayIndex].title
+    if (window.confirm(`remove blog ${blogToBeDeleted} by ${blogs[arrayIndex].author}`)) {
+    try {
+      await blogService.remove(_id)
+          setCoun2(count2+1)
+          setNotificationMessageType("success")
+          setNotificationMessage(`Blog ${blogToBeDeleted} deteled from backend`)
+        } catch (error) {
+        setNotificationMessageType("error")
+        setNotificationMessage(JSON.stringify(error.response.data.error))
+      }
+    setTimeout(() => {
+      setNotificationMessageType(null)
+      setNotificationMessage(null)
+    }, 5000)
+    }
    }
 
 
@@ -147,7 +188,7 @@ const logoutForm = () => {
     <div>
       <LogoutForm
         handleLogOut = {handleLogOut}
-        loggedPerson = {user.name}
+        loggedPerson = {loggedIn.name}
       />
     </div>
   )
@@ -164,6 +205,7 @@ return (
     <div style={showWhenVisible}>
       <NewForm
           addBlog={addBlog}
+          newTitle={newTitle}
           newAuthor={newAuthor}
           newUrl={newUrl}
           handleTitleChange={({ target }) => setTitle(target.value)}
@@ -176,7 +218,7 @@ return (
   )
 }
 
-  if (user === null) {
+  if (loggedIn === null) {
     return (
       <div>
         <Notification message={notificationMessage} notificationMessageType={notificationMessageType} />
