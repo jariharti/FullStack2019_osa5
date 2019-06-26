@@ -1,15 +1,15 @@
 // User is creating a new blog -> Step 1: user is giving blog information in the window //
 import React from 'react'
 const NewForm = ({
-    addBlog,
-    newTitle,
-    newAuthor,
-    newUrl,
-    handleTitleChange,
-    handleAuthorChange,
-    handleUrlChange
-    }) => { 
-    return (
+  addBlog,
+  newTitle,
+  newAuthor,
+  newUrl,
+  handleTitleChange,
+  handleAuthorChange,
+  handleUrlChange
+}) => {
+  return (
     <form onSubmit={addBlog}>
       <div>
         &nbsp; title &nbsp;
@@ -36,10 +36,10 @@ const NewForm = ({
           value={newUrl}
           name="url"
           onChange={handleUrlChange}
-      />
-        </div>
+        />
+      </div>
       <button type="submit">create</button>
-    </form>  
-    )
-  }
-  export default NewForm
+    </form>
+  )
+}
+export default NewForm

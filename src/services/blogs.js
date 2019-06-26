@@ -1,7 +1,7 @@
 import axios from 'axios'
 const baseUrl = '/api/blogs'
 
-let token = null 
+let token = null
 
 // The  Authorization: <type> <credentials> pattern was introduced by the W3C in HTTP 1.0, and has been reused in many places since //
 // Many web servers support multiple methods of authorization. In those cases sending just the token isn't sufficient. //
@@ -17,12 +17,12 @@ const getAll = async () => {
   return response.data
 }
 
-// Create a new blog 
+// Create a new blog
 const create = async newObject => {
   const config = {
     headers: { Authorization: token },
   }
-  const response = await axios.post(baseUrl, newObject, config) 
+  const response = await axios.post(baseUrl, newObject, config)
   return response.data
 }
 

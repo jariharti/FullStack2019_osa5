@@ -1,7 +1,7 @@
-/* Jari Hartikainen, 25.6.2019 */
-/* Aalto University, Course: Full Stack Web Development, Part 2: blogilistan frontrend 5.1 .... 5.10*/
+/* Jari Hartikainen, 26.6.2019 */
+/* Aalto University, Course: Full Stack Web Development, Part 2: blogilistan frontrend 5.1 .... 5.12*/
 
-import React, { useState, useEffect } from 'react' 
+import React, { useState, useEffect } from 'react'
 import Notification from './components/Notification'
 import blogService from './services/blogs'
 import loginService from './services/login'
@@ -10,21 +10,23 @@ import NewForm from './components/NewForm'
 import LoginForm from './components/LoginForm'
 import LogoutForm from './components/LogoutForm'
 import BlogList from './components/BlogList'
+import PropTypes from 'prop-types'
+
 
 const App = () => {
-  const [blogs, setBlogs] = useState([]) 
+  const [blogs, setBlogs] = useState([])
   const [notificationMessage, setNotificationMessage] = useState(null)
   const [notificationMessageType, setNotificationMessageType] = useState()
-  const [username, setUsername] = useState('') 
-  const [password, setPassword] = useState('') 
-  const [loggedIn, setLoggedIn] = useState(null) 
-  const [newTitle, setTitle] = useState('') 
-  const [newAuthor, setAuthor] = useState('') 
-  const [newUrl, setUrl] = useState('') 
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [loggedIn, setLoggedIn] = useState(null)
+  const [newTitle, setTitle] = useState('')
+  const [newAuthor, setAuthor] = useState('')
+  const [newUrl, setUrl] = useState('')
   const [blogVisible, setBlogVisible] = useState(false)
   const [count, setCount] = useState(0)
   const [count2, setCoun2] = useState(0)
- 
+
   // Get all blogs from backend, whenver count2 is changing //
   useEffect(() => {
     blogService
@@ -55,7 +57,7 @@ const App = () => {
 
       window.localStorage.setItem('loggedBlogappUser', JSON.stringify(loggedIn))
       blogService.setToken(loggedIn.token)
-      setNotificationMessageType("success")
+      setNotificationMessageType('success')
       setNotificationMessage(`${username} logged successfully`)
       setTimeout(() => {
         setNotificationMessageType(null)
@@ -65,17 +67,17 @@ const App = () => {
       setUsername('')
       setPassword('')
     } catch (exception) {
-        setNotificationMessageType("error")
-        setNotificationMessage('invalid username or password')
-        setTimeout(() => {
-          setNotificationMessageType(null)
-          setNotificationMessage(null)
-        }, 5000)
+      setNotificationMessageType('error')
+      setNotificationMessage('invalid username or password')
+      setTimeout(() => {
+        setNotificationMessageType(null)
+        setNotificationMessage(null)
+      }, 5000)
     }
   }
 
   // User has decided to logout -> Step 2: logout command
-  const handleLogOut = (event) => {
+  const handleLogOut = () => {
     window.localStorage.removeItem('loggedBlogappUser')
   }
 
@@ -94,7 +96,7 @@ const App = () => {
         setTitle('')
         setAuthor('')
         setUrl('')
-        setNotificationMessageType("success")
+        setNotificationMessageType('success')
         setNotificationMessage(`a new blog ${newTitle} by ${newAuthor} added`)
         setTimeout(() => {
           setNotificationMessageType(null)
@@ -103,10 +105,12 @@ const App = () => {
       })
   }
 
-  
+
+
+
 
   // List all the blogs for the window
-  const rows = () => blogs.map(blog => 
+  const rows = () => blogs.map(blog =>
     <BlogList
       key={blog.id}
       blog={blog}
@@ -117,106 +121,137 @@ const App = () => {
     />
   )
 
+  BlogList.propTypes = {
+    blog: PropTypes.object.isRequired,
+    loggedIn: PropTypes.string.isRequired,
+    showDetails: PropTypes.func.isRequired,
+    likesBlog: PropTypes.func.isRequired,
+    deleteBlog: PropTypes.func.isRequired,
+  }
+
   // Handle visibility change between showing all blogs data, or just sub set of the blogs data
   const showDetailsOf = (_id) => {
     blogs[blogs.findIndex(x => x.id === _id)].details = !blogs[blogs.findIndex(x => x.id === _id)].details
     setBlogs(blogs.sort((a,b) => b.likes - a.likes))
     setCount(count+1)
-   }
+  }
 
-   // Update new likes to backened
-   const likes = (_id) => {
+  // Update new likes to backened
+  const likes = (_id) => {
     var arrayIndex = blogs.findIndex(x => x.id === _id)
-      blogs[arrayIndex].likes = blogs[arrayIndex].likes + 1
-      setBlogs(blogs.sort((a,b) => b.likes - a.likes))
-      var updatedObject = {
-        likes: blogs[arrayIndex].likes,
-        author: blogs[arrayIndex].author,
-        title: blogs[arrayIndex].title,
-        url: blogs[arrayIndex].url
-      }
+    blogs[arrayIndex].likes = blogs[arrayIndex].likes + 1
+    setBlogs(blogs.sort((a,b) => b.likes - a.likes))
+    var updatedObject = {
+      likes: blogs[arrayIndex].likes,
+      author: blogs[arrayIndex].author,
+      title: blogs[arrayIndex].title,
+      url: blogs[arrayIndex].url
+    }
 
     blogService
-      .update(_id,updatedObject).then(returnedBlog => {
-        setNotificationMessageType("success")
-        setNotificationMessage(`a new like updated to backend`)
+      .update(_id,updatedObject).then(() => {
+        setNotificationMessageType('success')
+        setNotificationMessage('a new like updated to backend')
         setTimeout(() => {
           setNotificationMessageType(null)
           setNotificationMessage(null)
         }, 5000)
       })
-   }
+  }
 
-  // Delete blog in backened 
+  // Delete blog in backened
   const deleteBlog = async (_id) => {
     var arrayIndex = blogs.findIndex(x => x.id === _id)
     var blogToBeDeleted = blogs[arrayIndex].title
     if (window.confirm(`remove blog ${blogToBeDeleted} by ${blogs[arrayIndex].author}`)) {
-    try {
-      await blogService.remove(_id)
-          setCoun2(count2+1)
-          setNotificationMessageType("success")
-          setNotificationMessage(`Blog ${blogToBeDeleted} deteled from backend`)
-        } catch (error) {
-        setNotificationMessageType("error")
+      try {
+        await blogService.remove(_id)
+        setCoun2(count2+1)
+        setNotificationMessageType('success')
+        setNotificationMessage(`Blog ${blogToBeDeleted} deteled from backend`)
+      } catch (error) {
+        setNotificationMessageType('error')
         setNotificationMessage(JSON.stringify(error.response.data.error))
       }
-    setTimeout(() => {
-      setNotificationMessageType(null)
-      setNotificationMessage(null)
-    }, 5000)
+      setTimeout(() => {
+        setNotificationMessageType(null)
+        setNotificationMessage(null)
+      }, 5000)
     }
-   }
+  }
 
 
-const loginForm = () => {
-  return (
-    <div>
-      <LoginForm
-        username = {username}
-        password = {password}
-        handleLogin = {handleLogin}
-        handleUserName = {({ target }) => setUsername(target.value)}
-        handlePassword = {({ target }) => setPassword(target.value)}
-      />
-    </div>
-  )
-}
+  const loginForm = () => {
+    return (
+      <div>
+        <LoginForm
+          username = {username}
+          password = {password}
+          handleLogin = {handleLogin}
+          handleUserName = {({ target }) => setUsername(target.value)}
+          handlePassword = {({ target }) => setPassword(target.value)}
+        />
+      </div>
+    )
+  }
 
-const logoutForm = () => {
-  return (
-    <div>
-      <LogoutForm
-        handleLogOut = {handleLogOut}
-        loggedPerson = {loggedIn.name}
-      />
-    </div>
-  )
-}
+  LoginForm.propTypes = {
+    username: PropTypes.string.isRequired,
+    password: PropTypes.string.isRequired,
+    handleLogin: PropTypes.func.isRequired,
+    handleUserName: PropTypes.func.isRequired,
+    handlePassword: PropTypes.func.isRequired,
+  }
 
-const newForm = () => {
-  const hideWhenVisible = { display: blogVisible ? 'none' : '' }
-  const showWhenVisible = { display: blogVisible ? '' : 'none' }
-return (
-  <div>
-    <div style={hideWhenVisible}>
-      <button onClick={() => setBlogVisible(true)}>new note</button>
-    </div>
-    <div style={showWhenVisible}>
-      <NewForm
-          addBlog={addBlog}
-          newTitle={newTitle}
-          newAuthor={newAuthor}
-          newUrl={newUrl}
-          handleTitleChange={({ target }) => setTitle(target.value)}
-          handleAuthorChange={({ target }) => setAuthor(target.value)}
-          handleUrlChange={({ target }) => setUrl(target.value)}
-      />
-        <button onClick={() => setBlogVisible(false)}>cancel</button>
-    </div>
-  </div>
-  )
-}
+  const logoutForm = () => {
+    return (
+      <div>
+        <LogoutForm
+          handleLogOut = {handleLogOut}
+          loggedPerson = {loggedIn.name}
+        />
+      </div>
+    )
+  }
+
+  LogoutForm.propTypes = {
+    handleLogOut: PropTypes.func.isRequired,
+    loggedPerson: PropTypes.string.isRequired,
+  }
+
+  const newForm = () => {
+    const hideWhenVisible = { display: blogVisible ? 'none' : '' }
+    const showWhenVisible = { display: blogVisible ? '' : 'none' }
+    return (
+      <div>
+        <div style={hideWhenVisible}>
+          <button onClick={() => setBlogVisible(true)}>new note</button>
+        </div>
+        <div style={showWhenVisible}>
+          <NewForm
+            addBlog={addBlog}
+            newTitle={newTitle}
+            newAuthor={newAuthor}
+            newUrl={newUrl}
+            handleTitleChange={({ target }) => setTitle(target.value)}
+            handleAuthorChange={({ target }) => setAuthor(target.value)}
+            handleUrlChange={({ target }) => setUrl(target.value)}
+          />
+          <button onClick={() => setBlogVisible(false)}>cancel</button>
+        </div>
+      </div>
+    )
+  }
+
+  NewForm.propTypes = {
+    addBlog: PropTypes.func.isRequired,
+    newTitle: PropTypes.string.isRequired,
+    newAuthor: PropTypes.string.isRequired,
+    newUrl: PropTypes.string.isRequired,
+    handleTitleChange: PropTypes.func.isRequired,
+    handleAuthorChange: PropTypes.func.isRequired,
+    handleUrlChange: PropTypes.func.isRequired,
+  }
 
   if (loggedIn === null) {
     return (
@@ -230,14 +265,14 @@ return (
 
   else {
     return (
-    <div>
-      <Notification message={notificationMessage} notificationMessageType={notificationMessageType} />
-      <h2>blogs</h2>
-      {logoutForm()}
-      {newForm()}
-      {rows()}
-    </div>
-   )
+      <div>
+        <Notification message={notificationMessage} notificationMessageType={notificationMessageType} />
+        <h2>blogs</h2>
+        {logoutForm()}
+        {newForm()}
+        {rows()}
+      </div>
+    )
   }
 }
 

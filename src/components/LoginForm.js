@@ -1,19 +1,19 @@
 // User is trying to login to the system -> Step 1: user is giving login information in the window //
 import React from 'react'
 const LoginForm = (
-    {
-        handleLogin,
-        username,
-        password,
-        handleUserName,
-        handlePassword
-    }
+  {
+    handleLogin,
+    username,
+    password,
+    handleUserName,
+    handlePassword
+  }
 ) => {
-    return (
+  return (
     <form onSubmit={handleLogin}>
       <div>
       &nbsp; username &nbsp;
-          <input
+        <input
           type="text"
           value={username}
           name="Username"
@@ -22,7 +22,7 @@ const LoginForm = (
       </div>
       <div>
       &nbsp; password &nbsp;
-          <input
+        <input
           type="password"
           value={password}
           name="Password"
@@ -30,8 +30,8 @@ const LoginForm = (
         />
       </div>
       <button type="submit">login</button>
-    </form>  
-    )    
-  }
+    </form>
+  )
+}
 
 export default LoginForm
